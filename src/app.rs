@@ -5,9 +5,9 @@ pub enum Screen {
 
 pub struct App {
     pub token: String,
-    pub token_input: String, // the currently being edited json key.
+    pub token_input: String,
     pub waiting_for_token: bool,
-    pub current_screen: Screen, // the current screen the user is looking at, and will later determine what is rendered.
+    pub current_screen: Screen,
 }
 
 impl App {

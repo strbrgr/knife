@@ -9,6 +9,7 @@ use ratatui::{
     },
     prelude::{Backend, CrosstermBackend},
 };
+use ui::ui;
 
 use crate::app::{App, Screen};
 
