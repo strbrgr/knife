@@ -3,7 +3,7 @@ use std::io;
 use ratatui::{
     Terminal,
     crossterm::{
-        event::{self, DisableMouseCapture, EnableMouseCapture, Event},
+        event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyModifiers},
         execute,
         terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
     },
@@ -11,7 +11,7 @@ use ratatui::{
 };
 use ui::ui;
 
-use crate::app::{App, Screen};
+use crate::app::{App, Mode};
 
 mod app;
 mod ui;
@@ -28,7 +28,7 @@ fn main() -> io::Result<()> {
 
     // create app and run it
     let mut app = App::new();
-    let res = run_app(&mut terminal, &mut app);
+    let _ = run_app(&mut terminal, &mut app);
 
     // restore terminal
     disable_raw_mode()?;
@@ -43,22 +43,49 @@ fn main() -> io::Result<()> {
 }
 
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<()> {
-    loop {
+    while !app.exit {
         terminal.draw(|f| ui(f, app))?;
 
-        if let Event::Key(key) = event::read()? {
-            if key.kind == event::KeyEventKind::Release {
+        if let Event::Key(key_event) = event::read()? {
+            // Exit the app
+            if key_event.modifiers.contains(KeyModifiers::CONTROL)
+                && key_event.code == KeyCode::Char('c')
+            {
+                app.exit();
+            }
+            if key_event.kind == event::KeyEventKind::Release {
                 // Skip events that are not KeyEventKind::Press
                 continue;
             }
-            match app.current_screen {
-                Screen::Welcome => {
-                    todo!()
+            match app.mode {
+                Mode::Welcome => {
+                    if key_event.code == KeyCode::Enter {
+                        let path = "https://github.com/settings/tokens/new?scopes=delete_repo,repo&description=Repo%20Remover%20Token";
+
+                        app.waiting_for_token = true;
+                        app.mode = Mode::Auth;
+
+                        if let Err(e) = open::that(path) {
+                            eprintln!("Failed to open browser: {}", e);
+                        }
+                    }
                 }
-                Screen::Auth => {
-                    todo!()
-                }
+                Mode::Auth => match key_event.code {
+                    KeyCode::Char(value) => {
+                        app.token_input.push(value);
+                    }
+                    KeyCode::Enter => {
+                        app.token = app.token_input.clone();
+                        app.token_input = String::new();
+                        app.waiting_for_token = false;
+                        app.mode = Mode::Select;
+                    }
+                    _ => {}
+                },
+                Mode::Select => {}
             }
         }
     }
+
+    Ok(())
 }
