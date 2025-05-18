@@ -19,7 +19,7 @@ mod ui;
 mod utils;
 
 #[tokio::main]
-async fn main() -> io::Result<()> {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // setup terminal
     enable_raw_mode()?;
     let mut stderr = io::stderr(); // This is a special case. Normally using stdout is fine
@@ -29,7 +29,7 @@ async fn main() -> io::Result<()> {
 
     // create app and run it
     let mut app = App::new();
-    let _ = run_app(&mut terminal, &mut app).await;
+    run_app(&mut terminal, &mut app).await?;
 
     // restore terminal
     disable_raw_mode()?;
@@ -43,7 +43,10 @@ async fn main() -> io::Result<()> {
     Ok(())
 }
 
-async fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<()> {
+async fn run_app<B: Backend>(
+    terminal: &mut Terminal<B>,
+    app: &mut App,
+) -> Result<(), Box<dyn std::error::Error>> {
     while !app.exit {
         terminal.draw(|f| ui(f, app))?;
 
@@ -84,8 +87,8 @@ async fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::R
                     _ => {}
                 },
                 Mode::Select => {
-                    let user = get_user_with(&app.token).await.unwrap();
-                    let repos = get_repos_with(user.as_str(), &app.token).await.unwrap();
+                    let user = get_user_with(&app.token).await?;
+                    let repos = get_repos_with(user.as_str(), &app.token).await?;
                 }
             }
         }
