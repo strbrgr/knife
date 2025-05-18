@@ -10,15 +10,16 @@ use ratatui::{
     prelude::{Backend, CrosstermBackend},
 };
 use ui::ui;
+use utils::{get_repos_with, get_user_with};
 
 use crate::app::{App, Mode};
 
 mod app;
 mod ui;
+mod utils;
 
-fn main() -> io::Result<()> {
-    println!("Hello, world!");
-
+#[tokio::main]
+async fn main() -> io::Result<()> {
     // setup terminal
     enable_raw_mode()?;
     let mut stderr = io::stderr(); // This is a special case. Normally using stdout is fine
@@ -28,7 +29,7 @@ fn main() -> io::Result<()> {
 
     // create app and run it
     let mut app = App::new();
-    let _ = run_app(&mut terminal, &mut app);
+    let _ = run_app(&mut terminal, &mut app).await;
 
     // restore terminal
     disable_raw_mode()?;
@@ -42,7 +43,7 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<()> {
+async fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<()> {
     while !app.exit {
         terminal.draw(|f| ui(f, app))?;
 
@@ -82,7 +83,10 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                     }
                     _ => {}
                 },
-                Mode::Select => {}
+                Mode::Select => {
+                    let user = get_user_with(&app.token).await.unwrap();
+                    let repos = get_repos_with(user.as_str(), &app.token).await.unwrap();
+                }
             }
         }
     }

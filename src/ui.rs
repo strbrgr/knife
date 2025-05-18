@@ -6,7 +6,7 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
 };
 
-use crate::app::App;
+use crate::app::{App, Mode};
 
 pub fn ui(frame: &mut Frame, app: &App) {
     // Create the layout sections.
@@ -50,17 +50,14 @@ pub fn ui(frame: &mut Frame, app: &App) {
     frame.render_widget(main_block, chunks[1]);
     frame.render_widget(mode_footer, chunks[2]);
 
-    if app.waiting_for_token {
-        let input_area = centered_rect(60, 10, frame.area());
-
-        let key_block = Block::default()
-            .title(" Please paste your token here ")
-            .borders(Borders::ALL);
-
-        let token_text = Paragraph::new(app.token_input.clone())
-            .block(key_block)
-            .clone();
-        frame.render_widget(token_text, input_area);
+    match app.mode {
+        Mode::Welcome => {}
+        Mode::Auth => {
+            if app.waiting_for_token {
+                draw_token_input(frame, &app.token_input);
+            }
+        }
+        Mode::Select => {}
     }
 }
 
@@ -92,4 +89,15 @@ fn center(area: Rect, horizontal: Constraint, vertical: Constraint) -> Rect {
         .areas(area);
     let [area] = Layout::vertical([vertical]).flex(Flex::Center).areas(area);
     area
+}
+
+fn draw_token_input(frame: &mut Frame, input: &str) {
+    let input_area = centered_rect(60, 10, frame.area());
+
+    let key_block = Block::default()
+        .title(" Please paste your token here ")
+        .borders(Borders::ALL);
+
+    let token_text = Paragraph::new(input).block(key_block).clone();
+    frame.render_widget(token_text, input_area);
 }
