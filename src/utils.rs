@@ -11,7 +11,7 @@ pub struct Repo {
     name: String,
 }
 
-pub async fn get_user_with(token: &str) -> Result<String, reqwest::Error> {
+pub async fn get_user_with(token: &str) -> Result<String, Box<dyn std::error::Error>> {
     let uri = "https://api.github.com/user".to_string();
     let res = Client::new()
         .get(uri)
@@ -23,12 +23,15 @@ pub async fn get_user_with(token: &str) -> Result<String, reqwest::Error> {
         .await?;
 
     let body = res.text().await?;
-    let user: User = serde_json::from_str(body.as_str()).unwrap();
+    let user: User = serde_json::from_str(&body)?;
 
     Ok(user.login)
 }
 
-pub async fn get_repos_with(user: &str, token: &str) -> Result<Vec<Repo>, reqwest::Error> {
+pub async fn get_repos_with(
+    user: &str,
+    token: &str,
+) -> Result<Vec<Repo>, Box<dyn std::error::Error>> {
     let uri = format!("https://api.github.com/users/{user}/repos").to_string();
     let res = Client::new()
         .get(uri)
@@ -40,7 +43,7 @@ pub async fn get_repos_with(user: &str, token: &str) -> Result<Vec<Repo>, reqwes
         .await?;
 
     let body = res.text().await?;
-    let repos: Vec<Repo> = serde_json::from_str(body.as_str()).unwrap();
+    let repos: Vec<Repo> = serde_json::from_str(body.as_str())?;
 
     Ok(repos)
 }

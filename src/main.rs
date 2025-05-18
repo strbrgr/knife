@@ -67,7 +67,7 @@ async fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::R
                         app.mode = Mode::Auth;
 
                         if let Err(e) = open::that(path) {
-                            eprintln!("Failed to open browser: {}", e);
+                            eprintln!("Failed to open browser: {e}");
                         }
                     }
                 }
