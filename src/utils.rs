@@ -2,7 +2,7 @@ use reqwest::Client;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
-struct User {
+pub struct User {
     login: String,
 }
 
