@@ -2,7 +2,7 @@ use ratatui::{
     Frame,
     layout::{Constraint, Direction, Flex, Layout, Rect},
     style::{Color, Style},
-    text::{Line, Span},
+    text::{Line, Span, Text},
     widgets::{Block, Borders, Paragraph},
 };
 
@@ -19,15 +19,19 @@ pub fn ui(frame: &mut Frame, app: &App) {
         ])
         .split(frame.area());
 
-    let main_block = Block::default()
-        .borders(Borders::ALL)
-        .style(Style::default().bg(Color::Black));
-
     // Change this depending on Mode
-    let footer_text = Span::styled("Not Editing Anything", Style::default().fg(Color::DarkGray));
+    let footer_text = match app.mode {
+        Mode::Welcome => Span::styled(
+            "Hit enter to get your token",
+            Style::default().fg(Color::DarkGray),
+        ),
+        Mode::Auth => Span::styled("Waiting for token", Style::default().fg(Color::DarkGray)),
+        Mode::Select => Span::styled("Not Editing Anything", Style::default().fg(Color::DarkGray)),
+    };
 
-    let mode_footer =
-        Paragraph::new(Line::from(footer_text)).block(Block::default().borders(Borders::ALL));
+    let mode_footer = Paragraph::new(Line::from(footer_text))
+        .alignment(ratatui::layout::Alignment::Center)
+        .block(Block::default());
 
     let ascii_art = r#"
 ██ ▄█▀ ███▄    █  ██▓  █████▒▓█████ 
@@ -46,8 +50,22 @@ pub fn ui(frame: &mut Frame, app: &App) {
         .style(Style::default().fg(Color::Yellow))
         .block(Block::new());
 
+    let info_text = vec![
+        Line::from(String::from(
+            "Welcome to knife, a terminal application to delete old deserted GitHub repositories.",
+        )),
+        Line::from(String::from(
+            "After hitting enter your default browser will open and redirect you to the personal access token webpage on Github.",
+        )),
+    ];
+
+    let welcome_text = Paragraph::new(Text::from(info_text))
+        .alignment(ratatui::layout::Alignment::Center)
+        .style(Style::default().fg(Color::Yellow))
+        .block(Block::new());
+
     frame.render_widget(logo, chunks[0]);
-    frame.render_widget(main_block, chunks[1]);
+    frame.render_widget(welcome_text, chunks[1]);
     frame.render_widget(mode_footer, chunks[2]);
 
     match app.mode {
