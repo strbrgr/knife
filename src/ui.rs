@@ -1,15 +1,14 @@
 use ratatui::{
     Frame,
     layout::{Constraint, Direction, Flex, Layout, Rect},
-    style::{Color, Style},
+    style::{Color, Modifier, Style, Stylize},
     text::{Line, Span, Text},
-    widgets::{Block, Borders, Paragraph},
+    widgets::{Block, Borders, List, ListDirection, ListItem, Paragraph},
 };
 
 use crate::app::{App, Mode};
 
 pub fn ui(frame: &mut Frame, app: &App) {
-    // Create the layout sections.
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -19,14 +18,13 @@ pub fn ui(frame: &mut Frame, app: &App) {
         ])
         .split(frame.area());
 
-    // Change this depending on Mode
     let footer_text = match app.mode {
         Mode::Welcome => Span::styled(
             "Hit enter to get your token",
             Style::default().fg(Color::DarkGray),
         ),
         Mode::Auth => Span::styled("Waiting for token", Style::default().fg(Color::DarkGray)),
-        Mode::Select => Span::styled("Not Editing Anything", Style::default().fg(Color::DarkGray)),
+        Mode::Select => Span::styled("Select a repo", Style::default().fg(Color::DarkGray)),
     };
 
     let mode_footer = Paragraph::new(Line::from(footer_text))
@@ -75,7 +73,11 @@ pub fn ui(frame: &mut Frame, app: &App) {
                 draw_token_input(frame, &app.token_input);
             }
         }
-        Mode::Select => {}
+        Mode::Select => {
+            if app.repos.is_some() {
+                draw_repo_list(frame, chunks[1], &app.repos);
+            }
+        }
     }
 }
 
@@ -118,4 +120,24 @@ fn draw_token_input(frame: &mut Frame, input: &str) {
 
     let token_text = Paragraph::new(input).block(key_block).clone();
     frame.render_widget(token_text, input_area);
+}
+
+fn draw_repo_list(frame: &mut Frame, area: Rect, repo: &Option<Vec<String>>) {
+    let input_area = centered_rect(60, 60, area); // 60% width and height *of the given area*
+    if let Some(names) = repo {
+        let items: Vec<ListItem> = names
+            .iter()
+            .map(|name| ListItem::new(name.clone()))
+            .collect();
+
+        let list = List::new(items)
+            .block(Block::bordered().title("Repos"))
+            .style(Style::default().fg(Color::White))
+            .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
+            .highlight_symbol(">> ")
+            .repeat_highlight_symbol(true)
+            .direction(ListDirection::TopToBottom);
+
+        frame.render_widget(list, input_area);
+    }
 }

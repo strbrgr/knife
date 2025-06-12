@@ -1,4 +1,6 @@
 use reqwest::Client;
+use serde::Serialize;
+
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -6,7 +8,7 @@ pub struct User {
     login: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Repo {
     name: String,
 }
@@ -31,7 +33,7 @@ pub async fn get_user_with(token: &str) -> Result<String, Box<dyn std::error::Er
 pub async fn get_repos_with(
     user: &str,
     token: &str,
-) -> Result<Vec<Repo>, Box<dyn std::error::Error>> {
+) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let uri = format!("https://api.github.com/users/{user}/repos").to_string();
     let res = Client::new()
         .get(uri)
@@ -43,7 +45,10 @@ pub async fn get_repos_with(
         .await?;
 
     let body = res.text().await?;
-    let repos: Vec<Repo> = serde_json::from_str(body.as_str())?;
+    let repo_names = serde_json::from_str::<Vec<Repo>>(body.as_str())?
+        .into_iter()
+        .map(|r| r.name)
+        .collect::<Vec<_>>();
 
-    Ok(repos)
+    Ok(repo_names)
 }
