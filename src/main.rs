@@ -9,7 +9,7 @@ use ratatui::{
 };
 use std::io;
 use ui::ui;
-use utils::{get_repos_with, get_user_with};
+use utils::get_repos_from_github;
 
 use crate::app::{App, Mode};
 
@@ -81,8 +81,8 @@ async fn run_app<B: Backend>(
                         app.token = app.token_input.clone();
                         app.token_input = String::new();
                         app.waiting_for_token = false;
-                        let user = get_user_with(&app.token).await?;
-                        let repos = get_repos_with(user.as_str(), &app.token).await?;
+
+                        let repos = get_repos_from_github(&app.token).await?;
                         app.repos = Some(repos);
                         app.mode = Mode::Select;
                     }
