@@ -6,6 +6,7 @@ pub enum Mode {
     Welcome,
     Auth,
     Select,
+    Confirm,
 }
 
 pub struct App {
@@ -46,14 +47,6 @@ impl App {
 
     pub fn select_previous(&mut self) {
         self.repo_list.state.select_previous();
-    }
-
-    pub fn select_first(&mut self) {
-        self.repo_list.state.select_first();
-    }
-
-    pub fn select_last(&mut self) {
-        self.repo_list.state.select_last();
     }
 
     pub fn toggle_status(&mut self) {
