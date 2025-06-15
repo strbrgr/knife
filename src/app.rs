@@ -40,10 +40,6 @@ impl App {
         self.exit = true;
     }
 
-    pub fn select_none(&mut self) {
-        self.repo_list.state.select(None)
-    }
-
     pub fn select_next(&mut self) {
         self.repo_list.state.select_next();
     }
