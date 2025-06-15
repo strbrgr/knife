@@ -89,3 +89,7 @@ async fn get_resource(
         }
     }
 }
+
+async fn delete_repos() {
+    todo!()
+}
