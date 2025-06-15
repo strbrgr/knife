@@ -1,14 +1,17 @@
 use ratatui::{
     Frame,
     layout::{Constraint, Direction, Flex, Layout, Rect},
-    style::{Color, Modifier, Style, Stylize},
+    style::{Color, Style},
     text::{Line, Span, Text},
-    widgets::{Block, Borders, List, ListDirection, ListItem, Paragraph},
+    widgets::{Block, Borders, Paragraph},
 };
 
-use crate::app::{App, Mode};
+use crate::{
+    app::{App, Mode},
+    components::list::render_list,
+};
 
-pub fn ui(frame: &mut Frame, app: &App) {
+pub fn ui(frame: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -18,22 +21,28 @@ pub fn ui(frame: &mut Frame, app: &App) {
         ])
         .split(frame.area());
 
+    // TODO: Move this into comonents folder
     let footer_text = match app.mode {
         Mode::Welcome => Span::styled(
             "Hit enter to get your token",
             Style::default().fg(Color::DarkGray),
         ),
         Mode::Auth => Span::styled("Waiting for token", Style::default().fg(Color::DarkGray)),
-        Mode::Select => Span::styled("Select a repo", Style::default().fg(Color::DarkGray)),
+        Mode::Select => Span::styled(
+            "Use ↓↑ to move, ← to unselect, → to change status, g/G to go top/bottom.",
+            Style::default().fg(Color::DarkGray),
+        ),
     };
 
+    // TODO: Move this into comonents folder
     let mode_footer = Paragraph::new(Line::from(footer_text))
         .alignment(ratatui::layout::Alignment::Center)
         .block(Block::default());
 
+    // TODO: Move this into comonents folder
     let ascii_art = r#"
 ██ ▄█▀ ███▄    █  ██▓  █████▒▓█████ 
-██▄█▒  ██ ▀█   █ ▓██▒▓██   ▒ ▓█   ▀ 
+██▄█  ██ ▀█   █ ▓██▒▓██   ▒ ▓█   ▀ 
 ▓███▄░ ▓██  ▀█ ██▒▒██▒▒████ ░ ▒███   
 ▓██ █▄ ▓██▒  ▐▌██▒░██░░▓█▒  ░ ▒▓█  ▄ 
 ▒██▒ █▄▒██░   ▓██░░██░░▒█░    ░▒████▒
@@ -43,11 +52,13 @@ pub fn ui(frame: &mut Frame, app: &App) {
 ░  ░            ░  ░             ░  ░
 "#;
 
+    // TODO: Move this into comonents folder
     let logo = Paragraph::new(ascii_art)
         .alignment(ratatui::layout::Alignment::Center)
         .style(Style::default().fg(Color::Yellow))
         .block(Block::new());
 
+    // TODO: Move this into comonents folder
     let info_text = vec![
         Line::from(String::from(
             "Welcome to knife, a terminal application to delete old deserted GitHub repositories.",
@@ -57,6 +68,7 @@ pub fn ui(frame: &mut Frame, app: &App) {
         )),
     ];
 
+    // TODO: Move this into comonents folder
     let welcome_text = Paragraph::new(Text::from(info_text))
         .alignment(ratatui::layout::Alignment::Center)
         .style(Style::default().fg(Color::Yellow))
@@ -74,8 +86,9 @@ pub fn ui(frame: &mut Frame, app: &App) {
             }
         }
         Mode::Select => {
-            if app.repos.is_some() {
-                draw_repo_list(frame, chunks[1], &app.repos);
+            if !app.waiting_for_repos {
+                render_list(&mut app.repo_list, chunks[1], frame.buffer_mut());
+                // render_selected_item(&mut app.repo_list, chunks[1], frame.buffer_mut());
             }
         }
     }
@@ -120,24 +133,4 @@ fn draw_token_input(frame: &mut Frame, input: &str) {
 
     let token_text = Paragraph::new(input).block(key_block).clone();
     frame.render_widget(token_text, input_area);
-}
-
-fn draw_repo_list(frame: &mut Frame, area: Rect, repo: &Option<Vec<String>>) {
-    let input_area = centered_rect(60, 60, area); // 60% width and height *of the given area*
-    if let Some(names) = repo {
-        let items: Vec<ListItem> = names
-            .iter()
-            .map(|name| ListItem::new(name.clone()))
-            .collect();
-
-        let list = List::new(items)
-            .block(Block::bordered().title("Repos"))
-            .style(Style::default().fg(Color::White))
-            .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
-            .highlight_symbol(">> ")
-            .repeat_highlight_symbol(true)
-            .direction(ListDirection::TopToBottom);
-
-        frame.render_widget(list, input_area);
-    }
 }
