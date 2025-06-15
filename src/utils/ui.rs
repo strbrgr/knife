@@ -8,7 +8,7 @@ use ratatui::{
 
 use crate::{
     app::{App, Mode},
-    components::list::render_list,
+    components::{list::render_list, logo::Logo},
 };
 
 pub fn ui(frame: &mut Frame, app: &mut App) {
@@ -39,24 +39,7 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
         .alignment(ratatui::layout::Alignment::Center)
         .block(Block::default());
 
-    // TODO: Move this into comonents folder
-    let ascii_art = r#"
-██ ▄█▀ ███▄    █  ██▓  █████▒▓█████ 
-██▄█  ██ ▀█   █ ▓██▒▓██   ▒ ▓█   ▀ 
-▓███▄░ ▓██  ▀█ ██▒▒██▒▒████ ░ ▒███   
-▓██ █▄ ▓██▒  ▐▌██▒░██░░▓█▒  ░ ▒▓█  ▄ 
-▒██▒ █▄▒██░   ▓██░░██░░▒█░    ░▒████▒
-▒ ▒▒ ▓▒░ ▒░   ▒ ▒ ░▓   ▒ ░    ░░ ▒░ ░
-░ ░▒ ▒░░ ░░   ░ ▒░ ▒ ░ ░       ░ ░  ░
-░ ░░ ░    ░   ░ ░  ▒ ░ ░ ░       ░   
-░  ░            ░  ░             ░  ░
-"#;
-
-    // TODO: Move this into comonents folder
-    let logo = Paragraph::new(ascii_art)
-        .alignment(ratatui::layout::Alignment::Center)
-        .style(Style::default().fg(Color::Yellow))
-        .block(Block::new());
+    let logo = Logo::new();
 
     // TODO: Move this into comonents folder
     let info_text = vec![
