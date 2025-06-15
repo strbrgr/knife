@@ -1,7 +1,7 @@
 use ratatui::{
     Frame,
     layout::{Constraint, Direction, Flex, Layout, Rect},
-    style::{Color, Style},
+    style::{Color, Modifier, Style},
     text::{Line, Span, Text},
     widgets::{Block, Borders, Paragraph},
 };
@@ -11,6 +11,7 @@ use crate::{
     components::{list::render_list, logo::Logo},
 };
 
+// TODO: Make separate Widget components
 pub fn ui(frame: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -23,19 +24,32 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
 
     // TODO: Move this into comonents folder
     let footer_text = match app.mode {
-        Mode::Welcome => Span::styled(
-            "Hit enter to get your token",
+        Mode::Welcome => Line::from(vec![
+            Span::styled("Hit ", Style::default().fg(Color::DarkGray)),
+            Span::styled(
+                "Enter",
+                Style::default()
+                    .fg(Color::DarkGray)
+                    .add_modifier(Modifier::ITALIC)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::styled(
+                " to get your Token from Github!",
+                Style::default().fg(Color::DarkGray),
+            ),
+        ]),
+        Mode::Auth => Line::from(vec![Span::styled(
+            "Waiting for token",
             Style::default().fg(Color::DarkGray),
-        ),
-        Mode::Auth => Span::styled("Waiting for token", Style::default().fg(Color::DarkGray)),
-        Mode::Select => Span::styled(
-            "Use ↓↑ to move, ← to unselect, → to change status, g/G to go top/bottom.",
+        )]),
+        Mode::Select => Line::from(vec![Span::styled(
+            "Use ↓↑ to move, , Enter to toggle status, g/G to go top/bottom.",
             Style::default().fg(Color::DarkGray),
-        ),
+        )]),
     };
 
     // TODO: Move this into comonents folder
-    let mode_footer = Paragraph::new(Line::from(footer_text))
+    let mode_footer = Paragraph::new(footer_text)
         .alignment(ratatui::layout::Alignment::Center)
         .block(Block::default());
 
@@ -47,7 +61,7 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
             "Welcome to knife, a terminal application to delete old deserted GitHub repositories.",
         )),
         Line::from(String::from(
-            "After hitting enter your default browser will open and redirect you to the personal access token webpage on Github.",
+            "After hitting Enter, your default browser will open and redirect you to the personal access token webpage on Github.",
         )),
     ];
 
@@ -71,7 +85,6 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
         Mode::Select => {
             if !app.waiting_for_repos {
                 render_list(&mut app.repo_list, chunks[1], frame.buffer_mut());
-                // render_selected_item(&mut app.repo_list, chunks[1], frame.buffer_mut());
             }
         }
     }
@@ -108,6 +121,7 @@ fn center(area: Rect, horizontal: Constraint, vertical: Constraint) -> Rect {
 }
 
 fn draw_token_input(frame: &mut Frame, input: &str) {
+    // TODO: Show a cursor and let a user delete an entry and move within the input
     let input_area = centered_rect(60, 10, frame.area());
 
     let key_block = Block::default()
