@@ -56,6 +56,7 @@ async fn run_app<B: Backend>(
             {
                 app.exit();
             }
+
             if key_event.kind == event::KeyEventKind::Release {
                 // Skip events that are not KeyEventKind::Press
                 continue;
@@ -93,8 +94,7 @@ async fn run_app<B: Backend>(
                     _ => {}
                 },
                 Mode::Select => match key_event.code {
-                    KeyCode::Char('q') | KeyCode::Esc => app.exit = true,
-                    KeyCode::Char('h') | KeyCode::Left => app.select_none(),
+                    KeyCode::Char('q') | KeyCode::Esc => app.exit(),
                     KeyCode::Char('j') | KeyCode::Down => app.select_next(),
                     KeyCode::Char('k') | KeyCode::Up => app.select_previous(),
                     KeyCode::Char('g') | KeyCode::Home => app.select_first(),
