@@ -13,7 +13,7 @@ impl Widget for Logo {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let paragraph = Paragraph::new(self.content)
             .alignment(ratatui::layout::Alignment::Center)
-            .style(Style::default().fg(Color::Yellow))
+            .style(Style::default().fg(Color::LightRed))
             .block(Block::new());
 
         paragraph.render(area, buf);
