@@ -1,3 +1,4 @@
+use components::list::RepoList;
 use ratatui::{
     Terminal,
     crossterm::{
@@ -6,15 +7,15 @@ use ratatui::{
         terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
     },
     prelude::{Backend, CrosstermBackend},
+    widgets::ListState,
 };
 use std::io;
-use ui::ui;
-use utils::get_repos_from_github;
+use utils::ui::ui;
 
 use crate::app::{App, Mode};
 
 mod app;
-mod ui;
+mod components;
 mod utils;
 
 #[tokio::main]
@@ -50,7 +51,6 @@ async fn run_app<B: Backend>(
         terminal.draw(|f| ui(f, app))?;
 
         if let Event::Key(key_event) = event::read()? {
-            // Exit the app
             if key_event.modifiers.contains(KeyModifiers::CONTROL)
                 && key_event.code == KeyCode::Char('c')
             {
@@ -81,14 +81,29 @@ async fn run_app<B: Backend>(
                         app.token = app.token_input.clone();
                         app.token_input = String::new();
                         app.waiting_for_token = false;
-
-                        let repos = get_repos_from_github(&app.token).await?;
-                        app.repos = Some(repos);
+                        app.waiting_for_repos = true;
+                        let repos = utils::github::get_repos_from_github(&app.token).await?;
+                        app.repo_list = RepoList {
+                            repos: Some(repos),
+                            state: ListState::default(),
+                        };
+                        app.waiting_for_repos = false;
                         app.mode = Mode::Select;
                     }
                     _ => {}
                 },
-                Mode::Select => {}
+                Mode::Select => match key_event.code {
+                    KeyCode::Char('q') | KeyCode::Esc => app.exit = true,
+                    KeyCode::Char('h') | KeyCode::Left => app.select_none(),
+                    KeyCode::Char('j') | KeyCode::Down => app.select_next(),
+                    KeyCode::Char('k') | KeyCode::Up => app.select_previous(),
+                    KeyCode::Char('g') | KeyCode::Home => app.select_first(),
+                    KeyCode::Char('G') | KeyCode::End => app.select_last(),
+                    KeyCode::Char('l') | KeyCode::Right | KeyCode::Enter => {
+                        app.toggle_status();
+                    }
+                    _ => {}
+                },
             }
         }
     }
