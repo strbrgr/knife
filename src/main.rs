@@ -1,4 +1,4 @@
-use components::list::RepoList;
+use components::list::Status;
 use ratatui::{
     Terminal,
     crossterm::{
@@ -7,10 +7,10 @@ use ratatui::{
         terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
     },
     prelude::{Backend, CrosstermBackend},
-    widgets::ListState,
 };
+use reqwest::StatusCode;
 use std::io;
-use utils::ui::ui;
+use utils::{github::delete_repo, ui::ui};
 
 use crate::app::{App, Mode};
 
@@ -83,11 +83,8 @@ async fn run_app<B: Backend>(
                         app.token_input = String::new();
                         app.waiting_for_token = false;
                         app.waiting_for_repos = true;
-                        let repos = utils::github::get_repos_from_github(&app.token).await?;
-                        app.repo_list = RepoList {
-                            repos: Some(repos),
-                            state: ListState::default(),
-                        };
+                        let github_data = utils::github::get_data_from_github(&app.token).await?;
+                        app.github_data = Some(github_data);
                         app.waiting_for_repos = false;
                         app.mode = Mode::Select;
                     }
@@ -95,15 +92,58 @@ async fn run_app<B: Backend>(
                 },
                 Mode::Select => match key_event.code {
                     KeyCode::Char('q') | KeyCode::Esc => app.exit(),
-                    KeyCode::Char('j') | KeyCode::Down => app.select_next(),
-                    KeyCode::Char('k') | KeyCode::Up => app.select_previous(),
-                    KeyCode::Char('g') | KeyCode::Home => app.select_first(),
-                    KeyCode::Char('G') | KeyCode::End => app.select_last(),
-                    KeyCode::Char('l') | KeyCode::Right | KeyCode::Enter => {
+                    KeyCode::Down | KeyCode::Char('j') => app.select_next(),
+                    KeyCode::Up | KeyCode::Char('k') => app.select_previous(),
+                    KeyCode::Char(' ') => {
                         app.toggle_status();
+                    }
+                    KeyCode::Enter => {
+                        if let Some(github_data) = &app.github_data {
+                            let at_least_one_selected = github_data
+                                .repo_items
+                                .repos
+                                .iter()
+                                .any(|repo| repo.status == Status::Selected);
+
+                            if at_least_one_selected {
+                                app.mode = Mode::Confirm
+                            } else {
+                                // TODO: error case change colors
+                            }
+                        }
                     }
                     _ => {}
                 },
+                Mode::Confirm => {
+                    if key_event.code == KeyCode::Enter {
+                        if let Some(github_data) = &mut app.github_data {
+                            let selected_repos: Vec<String> = github_data
+                                .repo_items
+                                .repos
+                                .iter()
+                                .filter(|r| r.status == Status::Selected)
+                                .map(|r| r.name.clone())
+                                .collect();
+
+                            for repo_name in &selected_repos {
+                                let status_code =
+                                    delete_repo(&github_data.owner, repo_name, &app.token).await?;
+
+                                if status_code == StatusCode::NO_CONTENT {
+                                    github_data.repo_items.repos = github_data
+                                        .repo_items
+                                        .repos
+                                        .iter()
+                                        .filter(|repo| &repo.name != repo_name)
+                                        .cloned()
+                                        .collect();
+                                }
+                            }
+
+                            app.mode = Mode::Select;
+                        }
+                    }
+                }
             }
         }
     }
