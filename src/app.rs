@@ -1,6 +1,4 @@
-use ratatui::widgets::ListState;
-
-use crate::components::list::{RepoList, Status};
+use crate::components::list::{Repositories, Status};
 
 pub enum Mode {
     Welcome,
@@ -16,16 +14,11 @@ pub struct App {
     pub waiting_for_token: bool,
     pub mode: Mode,
     pub waiting_for_repos: bool,
-    pub repo_list: RepoList,
+    pub github_data: Option<Repositories>,
 }
 
 impl App {
     pub fn new() -> App {
-        let repo_list = RepoList {
-            repos: None,
-            state: ListState::default(),
-        };
-
         App {
             exit: false,
             token: String::new(),
@@ -33,7 +26,7 @@ impl App {
             waiting_for_token: false,
             mode: Mode::Welcome,
             waiting_for_repos: false,
-            repo_list,
+            github_data: None,
         }
     }
 
@@ -42,20 +35,25 @@ impl App {
     }
 
     pub fn select_next(&mut self) {
-        self.repo_list.state.select_next();
+        if let Some(github_data) = self.github_data.as_mut() {
+            github_data.repo_items.list_state.select_next();
+        }
     }
 
     pub fn select_previous(&mut self) {
-        self.repo_list.state.select_previous();
+        if let Some(github_data) = self.github_data.as_mut() {
+            github_data.repo_items.list_state.select_previous();
+        }
     }
 
     pub fn toggle_status(&mut self) {
-        if let Some(repos) = self.repo_list.repos.as_mut() {
-            if let Some(i) = self.repo_list.state.selected() {
-                repos[i].status = match repos[i].status {
-                    Status::Selected => Status::Unselected,
-                    Status::Unselected => Status::Selected,
-                };
+        if let Some(github_data) = self.github_data.as_mut() {
+            if let Some(i) = github_data.repo_items.list_state.selected() {
+                github_data.repo_items.repos[i].status =
+                    match github_data.repo_items.repos[i].status {
+                        Status::Selected => Status::Unselected,
+                        Status::Unselected => Status::Selected,
+                    };
             }
         }
     }
