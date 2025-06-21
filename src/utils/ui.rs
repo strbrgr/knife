@@ -3,12 +3,15 @@ use ratatui::{
     layout::{Constraint, Direction, Flex, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span, Text},
-    widgets::{Block, Borders, Paragraph},
+    widgets::{Block, Borders, Clear, Paragraph},
 };
 
 use crate::{
     app::{App, Mode},
-    components::{list::render_list, logo::Logo},
+    components::{
+        list::{RepoItem, Status, render_list},
+        logo::Logo,
+    },
 };
 
 // TODO: Make separate Widget components
@@ -43,7 +46,11 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
             Style::default().fg(Color::DarkGray),
         )]),
         Mode::Select => Line::from(vec![Span::styled(
-            "Use ↓↑ to move, , Enter to toggle status, g/G to go top/bottom.",
+            "Use ↓↑ or 'j' 'k' to move, Spacebar to toggle status, and Enter to confirm",
+            Style::default().fg(Color::DarkGray),
+        )]),
+        Mode::Confirm => Line::from(vec![Span::styled(
+            "Confirm to delete the selected repos",
             Style::default().fg(Color::DarkGray),
         )]),
     };
@@ -84,7 +91,14 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
         }
         Mode::Select => {
             if !app.waiting_for_repos {
-                render_list(&mut app.repo_list, chunks[1], frame.buffer_mut());
+                if let Some(github_data) = app.github_data.as_mut() {
+                    render_list(&mut github_data.repo_items, chunks[1], frame.buffer_mut());
+                }
+            }
+        }
+        Mode::Confirm => {
+            if let Some(github_data) = &app.github_data {
+                render_popup_content(frame, &github_data.repo_items.repos);
             }
         }
     }
@@ -130,4 +144,30 @@ fn draw_token_input(frame: &mut Frame, input: &str) {
 
     let token_text = Paragraph::new(input).block(key_block).clone();
     frame.render_widget(token_text, input_area);
+}
+
+fn popup_area(area: Rect, percent_x: u16, percent_y: u16) -> Rect {
+    let vertical = Layout::vertical([Constraint::Percentage(percent_y)]).flex(Flex::Center);
+    let horizontal = Layout::horizontal([Constraint::Percentage(percent_x)]).flex(Flex::Center);
+    let [area] = vertical.areas(area);
+    let [area] = horizontal.areas(area);
+    area
+}
+
+// TODO: Make this scrollable
+fn render_popup_content(frame: &mut Frame, repos: &Vec<RepoItem>) {
+    let mut lines = vec![];
+    for r in repos {
+        if r.status == Status::Selected {
+            lines.push(Line::from(r.name.clone()))
+        }
+    }
+    let text = Text::from(lines);
+    let p = Paragraph::new(text)
+        .alignment(ratatui::layout::Alignment::Center)
+        .block(Block::bordered());
+
+    let area = popup_area(frame.area(), 60, 40);
+    frame.render_widget(Clear, area); // this clears out the background
+    frame.render_widget(p, area);
 }
