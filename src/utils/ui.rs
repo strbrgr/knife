@@ -7,7 +7,7 @@ use ratatui::{
 };
 
 use crate::{
-    app::{App, Mode},
+    app::{App, ErrorState, Mode},
     components::{
         list::{RepoItem, Status, render_list},
         logo::Logo,
@@ -86,7 +86,12 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
         Mode::Welcome => {}
         Mode::Auth => {
             if app.waiting_for_token {
-                draw_token_input(frame, &app.token_input, app.character_index as u16);
+                draw_token_input(
+                    frame,
+                    &app.token_input,
+                    app.character_index as u16,
+                    &app.error_state,
+                );
             }
         }
         Mode::Select => {
@@ -126,20 +131,36 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
         .split(popup_layout[1])[1] // Return the middle chunk
 }
 
-fn center(area: Rect, horizontal: Constraint, vertical: Constraint) -> Rect {
-    let [area] = Layout::horizontal([horizontal])
-        .flex(Flex::Center)
-        .areas(area);
-    let [area] = Layout::vertical([vertical]).flex(Flex::Center).areas(area);
-    area
-}
+// fn center(area: Rect, horizontal: Constraint, vertical: Constraint) -> Rect {
+//     let [area] = Layout::horizontal([horizontal])
+//         .flex(Flex::Center)
+//         .areas(area);
+//     let [area] = Layout::vertical([vertical]).flex(Flex::Center).areas(area);
+//     area
+// }
 
-fn draw_token_input(frame: &mut Frame, input: &str, character_index: u16) {
+fn draw_token_input(
+    frame: &mut Frame,
+    input: &str,
+    character_index: u16,
+    error_state: &Option<ErrorState>,
+) {
     let input_area = centered_rect(60, 10, frame.area());
+
+    let border_style = if let Some(error_state) = error_state {
+        if *error_state == ErrorState::TokenTooLong {
+            Style::default().fg(Color::Red)
+        } else {
+            Style::default()
+        }
+    } else {
+        Style::default()
+    };
 
     let key_block = Block::default()
         .title(" Please paste your token here ")
-        .borders(Borders::ALL);
+        .borders(Borders::ALL)
+        .border_style(border_style);
 
     let token_text = Paragraph::new(input).block(key_block).clone();
     frame.render_widget(token_text, input_area);
