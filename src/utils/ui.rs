@@ -1,6 +1,6 @@
 use ratatui::{
     Frame,
-    layout::{Constraint, Direction, Flex, Layout, Rect},
+    layout::{Constraint, Direction, Flex, Layout, Position, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span, Text},
     widgets::{Block, Borders, Clear, Paragraph},
@@ -46,7 +46,7 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
             Style::default().fg(Color::DarkGray),
         )]),
         Mode::Select => Line::from(vec![Span::styled(
-            "Use ↓↑ or 'j' 'k' to move, Spacebar to toggle status, and Enter to confirm",
+            "Use ↓↑ or 'j' and 'k' to move, Spacebar to toggle status, and Enter to confirm",
             Style::default().fg(Color::DarkGray),
         )]),
         Mode::Confirm => Line::from(vec![Span::styled(
@@ -86,7 +86,7 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
         Mode::Welcome => {}
         Mode::Auth => {
             if app.waiting_for_token {
-                draw_token_input(frame, &app.token_input);
+                draw_token_input(frame, &app.token_input, app.character_index as u16);
             }
         }
         Mode::Select => {
@@ -134,8 +134,7 @@ fn center(area: Rect, horizontal: Constraint, vertical: Constraint) -> Rect {
     area
 }
 
-fn draw_token_input(frame: &mut Frame, input: &str) {
-    // TODO: Show a cursor and let a user delete an entry and move within the input
+fn draw_token_input(frame: &mut Frame, input: &str, character_index: u16) {
     let input_area = centered_rect(60, 10, frame.area());
 
     let key_block = Block::default()
@@ -144,6 +143,13 @@ fn draw_token_input(frame: &mut Frame, input: &str) {
 
     let token_text = Paragraph::new(input).block(key_block).clone();
     frame.render_widget(token_text, input_area);
+    frame.set_cursor_position(Position::new(
+        // Draw the cursor at the current position in the input field.
+        // This position is can be controlled via the left and right arrow key
+        input_area.x + character_index + 1,
+        // Move one line down, from the border to the input line
+        input_area.y + 1,
+    ));
 }
 
 fn popup_area(area: Rect, percent_x: u16, percent_y: u16) -> Rect {
