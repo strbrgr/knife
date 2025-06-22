@@ -9,30 +9,31 @@ pub enum Mode {
 
 pub struct App {
     pub exit: bool,
-    /// Current value of the input box
-    input: String,
     /// Position of cursor in the editor area.
     pub character_index: usize,
     pub token: String,
+    /// Current value of the input box
     pub token_input: String,
+    /// Are we waiting for the token
     pub waiting_for_token: bool,
+    /// Current mode of the app
     pub mode: Mode,
     pub waiting_for_repos: bool,
-    pub github_data: Option<Repositories>,
+    /// Data that is being fetched from github
+    pub repositories: Option<Repositories>,
 }
 
 impl App {
     pub fn new() -> App {
         App {
             exit: false,
-            input: String::new(),
             character_index: 0,
             token: String::new(),
             token_input: String::new(),
             waiting_for_token: false,
             mode: Mode::Welcome,
             waiting_for_repos: false,
-            github_data: None,
+            repositories: None,
         }
     }
 
@@ -104,22 +105,22 @@ impl App {
     }
 
     pub fn select_next(&mut self) {
-        if let Some(github_data) = self.github_data.as_mut() {
-            github_data.repo_items.list_state.select_next();
+        if let Some(repositories) = self.repositories.as_mut() {
+            repositories.repo_items.list_state.select_next();
         }
     }
 
     pub fn select_previous(&mut self) {
-        if let Some(github_data) = self.github_data.as_mut() {
-            github_data.repo_items.list_state.select_previous();
+        if let Some(repositories) = self.repositories.as_mut() {
+            repositories.repo_items.list_state.select_previous();
         }
     }
 
     pub fn toggle_status(&mut self) {
-        if let Some(github_data) = self.github_data.as_mut() {
-            if let Some(i) = github_data.repo_items.list_state.selected() {
-                github_data.repo_items.repos[i].status =
-                    match github_data.repo_items.repos[i].status {
+        if let Some(repositories) = self.repositories.as_mut() {
+            if let Some(i) = repositories.repo_items.list_state.selected() {
+                repositories.repo_items.repos[i].status =
+                    match repositories.repo_items.repos[i].status {
                         Status::Selected => Status::Unselected,
                         Status::Unselected => Status::Selected,
                     };

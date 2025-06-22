@@ -91,14 +91,14 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
         }
         Mode::Select => {
             if !app.waiting_for_repos {
-                if let Some(github_data) = app.github_data.as_mut() {
-                    render_list(&mut github_data.repo_items, chunks[1], frame.buffer_mut());
+                if let Some(repositories) = app.repositories.as_mut() {
+                    render_list(&mut repositories.repo_items, chunks[1], frame.buffer_mut());
                 }
             }
         }
         Mode::Confirm => {
-            if let Some(github_data) = &app.github_data {
-                render_popup_content(frame, &github_data.repo_items.repos);
+            if let Some(repositories) = &app.repositories {
+                render_popup_content(frame, &repositories.repo_items.repos);
             }
         }
     }

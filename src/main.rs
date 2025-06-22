@@ -84,8 +84,8 @@ async fn run_app<B: Backend>(
                         app.token_input = String::new();
                         app.waiting_for_token = false;
                         app.waiting_for_repos = true;
-                        let github_data = utils::github::get_data_from_github(&app.token).await?;
-                        app.github_data = Some(github_data);
+                        let repositories = utils::github::get_data_from_github(&app.token).await?;
+                        app.repositories = Some(repositories);
                         app.waiting_for_repos = false;
                         app.mode = Mode::Select;
                     }
@@ -108,8 +108,8 @@ async fn run_app<B: Backend>(
                         app.toggle_status();
                     }
                     KeyCode::Enter => {
-                        if let Some(github_data) = &app.github_data {
-                            let at_least_one_selected = github_data
+                        if let Some(repositories) = &app.repositories {
+                            let at_least_one_selected = repositories
                                 .repo_items
                                 .repos
                                 .iter()
@@ -126,8 +126,8 @@ async fn run_app<B: Backend>(
                 },
                 Mode::Confirm => {
                     if key_event.code == KeyCode::Enter {
-                        if let Some(github_data) = &mut app.github_data {
-                            let selected_repos: Vec<String> = github_data
+                        if let Some(repositories) = &mut app.repositories {
+                            let selected_repos: Vec<String> = repositories
                                 .repo_items
                                 .repos
                                 .iter()
@@ -137,10 +137,10 @@ async fn run_app<B: Backend>(
 
                             for repo_name in &selected_repos {
                                 let status_code =
-                                    delete_repo(&github_data.owner, repo_name, &app.token).await?;
+                                    delete_repo(&repositories.owner, repo_name, &app.token).await?;
 
                                 if status_code == StatusCode::NO_CONTENT {
-                                    github_data.repo_items.repos = github_data
+                                    repositories.repo_items.repos = repositories
                                         .repo_items
                                         .repos
                                         .iter()
