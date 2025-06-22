@@ -1,3 +1,4 @@
+use app::ErrorState;
 use components::list::Status;
 use ratatui::{
     Terminal,
@@ -138,6 +139,10 @@ async fn run_app<B: Backend>(
                             for repo_name in &selected_repos {
                                 let status_code =
                                     delete_repo(&repositories.owner, repo_name, &app.token).await?;
+
+                                if status_code.is_client_error() {
+                                    app.error_state = Some(ErrorState::DeleteClientError);
+                                }
 
                                 if status_code == StatusCode::NO_CONTENT {
                                     repositories.repo_items.repos = repositories

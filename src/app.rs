@@ -1,5 +1,6 @@
 use crate::components::list::{Repositories, Status};
 
+#[derive(PartialEq, Eq, Hash)]
 pub enum Mode {
     Welcome,
     Auth,
@@ -7,7 +8,14 @@ pub enum Mode {
     Confirm,
 }
 
+#[derive(PartialEq, Eq, Hash)]
+pub enum ErrorState {
+    DeleteClientError,
+    TokenTooLong,
+}
+
 pub struct App {
+    /// Should the app exit
     pub exit: bool,
     /// Position of cursor in the editor area.
     pub character_index: usize,
@@ -18,9 +26,12 @@ pub struct App {
     pub waiting_for_token: bool,
     /// Current mode of the app
     pub mode: Mode,
+    /// Are we waiting for repos
     pub waiting_for_repos: bool,
     /// Data that is being fetched from github
     pub repositories: Option<Repositories>,
+    /// Error state for the app
+    pub error_state: Option<ErrorState>,
 }
 
 impl App {
@@ -34,6 +45,7 @@ impl App {
             mode: Mode::Welcome,
             waiting_for_repos: false,
             repositories: None,
+            error_state: None,
         }
     }
 
@@ -52,9 +64,18 @@ impl App {
     }
 
     pub fn enter_char(&mut self, new_char: char) {
-        let index = self.byte_index();
-        self.token_input.insert(index, new_char);
-        self.move_cursor_right();
+        // Github PAT length as of 06/25
+        if self.token_input.len() > 40 {
+            self.error_state = Some(ErrorState::TokenTooLong);
+        }
+        // Let's not add any more characters if we reached the limit
+        if let Some(error) = &self.error_state {
+            if *error != ErrorState::TokenTooLong {
+                let index = self.byte_index();
+                self.token_input.insert(index, new_char);
+                self.move_cursor_right();
+            }
+        }
     }
 
     /// Returns the byte index based on the character position.
