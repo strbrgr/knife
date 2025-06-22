@@ -75,10 +75,11 @@ async fn run_app<B: Backend>(
                     }
                 }
                 Mode::Auth => match key_event.code {
-                    KeyCode::Char(value) => {
-                        app.token_input.push(value);
+                    KeyCode::Char(to_insert) => {
+                        app.enter_char(to_insert);
                     }
                     KeyCode::Enter => {
+                        app.submit_message();
                         app.token = app.token_input.clone();
                         app.token_input = String::new();
                         app.waiting_for_token = false;
@@ -87,6 +88,15 @@ async fn run_app<B: Backend>(
                         app.github_data = Some(github_data);
                         app.waiting_for_repos = false;
                         app.mode = Mode::Select;
+                    }
+                    KeyCode::Backspace => app.delete_char(),
+                    KeyCode::Left => app.move_cursor_left(),
+                    KeyCode::Right => app.move_cursor_right(),
+                    KeyCode::Esc => {
+                        app.mode = Mode::Welcome;
+                        app.reset_cursor();
+                        app.token = String::new();
+                        app.token_input = String::new();
                     }
                     _ => {}
                 },
