@@ -14,7 +14,6 @@ use crate::{
     },
 };
 
-// TODO: Make separate Widget components
 pub fn ui(frame: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -25,7 +24,6 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
         ])
         .split(frame.area());
 
-    // TODO: Move this into comonents folder
     let footer_text = match app.mode {
         Mode::Welcome => Line::from(vec![
             Span::styled("Hit ", Style::default().fg(Color::DarkGray)),
@@ -41,10 +39,15 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
                 Style::default().fg(Color::DarkGray),
             ),
         ]),
-        Mode::Auth => Line::from(vec![Span::styled(
-            "Waiting for token",
-            Style::default().fg(Color::DarkGray),
-        )]),
+        Mode::Auth => {
+            let (footer_text, style) = if app.token_limit_reached() {
+                ("Token invalid", Style::default().fg(Color::Red))
+            } else {
+                ("Waiting for token", Style::default().fg(Color::DarkGray))
+            };
+
+            Line::from(vec![Span::styled(footer_text, style)])
+        }
         Mode::Select => Line::from(vec![Span::styled(
             "Use ↓↑ or 'j' and 'k' to move, Spacebar to toggle status, and Enter to confirm",
             Style::default().fg(Color::DarkGray),
@@ -55,14 +58,12 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
         )]),
     };
 
-    // TODO: Move this into comonents folder
     let mode_footer = Paragraph::new(footer_text)
         .alignment(ratatui::layout::Alignment::Center)
         .block(Block::default());
 
     let logo = Logo::new();
 
-    // TODO: Move this into comonents folder
     let info_text = vec![
         Line::from(String::from(
             "Welcome to knife, a terminal application to delete old deserted GitHub repositories.",
@@ -72,7 +73,6 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
         )),
     ];
 
-    // TODO: Move this into comonents folder
     let welcome_text = Paragraph::new(Text::from(info_text))
         .alignment(ratatui::layout::Alignment::Center)
         .style(Style::default().fg(Color::Yellow))
@@ -90,7 +90,7 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
                     frame,
                     &app.token_input,
                     app.character_index as u16,
-                    &app.error_state,
+                    app.token_limit_reached(),
                 );
             }
         }
@@ -131,28 +131,16 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
         .split(popup_layout[1])[1] // Return the middle chunk
 }
 
-// fn center(area: Rect, horizontal: Constraint, vertical: Constraint) -> Rect {
-//     let [area] = Layout::horizontal([horizontal])
-//         .flex(Flex::Center)
-//         .areas(area);
-//     let [area] = Layout::vertical([vertical]).flex(Flex::Center).areas(area);
-//     area
-// }
-
 fn draw_token_input(
     frame: &mut Frame,
     input: &str,
     character_index: u16,
-    error_state: &Option<ErrorState>,
+    token_input_too_long: bool,
 ) {
     let input_area = centered_rect(60, 10, frame.area());
 
-    let border_style = if let Some(error_state) = error_state {
-        if *error_state == ErrorState::TokenTooLong {
-            Style::default().fg(Color::Red)
-        } else {
-            Style::default()
-        }
+    let border_style = if token_input_too_long {
+        Style::default().fg(Color::Red)
     } else {
         Style::default()
     };

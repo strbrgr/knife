@@ -11,7 +11,6 @@ pub enum Mode {
 #[derive(PartialEq, Eq, Hash)]
 pub enum ErrorState {
     DeleteClientError,
-    TokenTooLong,
 }
 
 pub struct App {
@@ -64,17 +63,13 @@ impl App {
     }
 
     pub fn enter_char(&mut self, new_char: char) {
-        // Github PAT length as of 06/25
-        if self.token_input.len() > 40 {
-            self.error_state = Some(ErrorState::TokenTooLong);
-        }
         // Let's not add any more characters if we reached the limit
-        if let Some(error) = &self.error_state {
-            if *error != ErrorState::TokenTooLong {
-                let index = self.byte_index();
-                self.token_input.insert(index, new_char);
-                self.move_cursor_right();
-            }
+        // TODO: Debug print
+        println!("{}", self.token_input);
+        if self.token_limit_reached() {
+            let index = self.byte_index();
+            self.token_input.insert(index, new_char);
+            self.move_cursor_right();
         }
     }
 
@@ -147,5 +142,9 @@ impl App {
                     };
             }
         }
+    }
+
+    pub fn token_limit_reached(&self) -> bool {
+        self.token_input.len() >= 40
     }
 }
