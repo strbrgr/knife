@@ -7,7 +7,7 @@ use ratatui::{
 };
 
 use crate::{
-    app::{App, ErrorState, Mode},
+    app::{App, Mode},
     components::{
         list::{RepoItem, Status, render_list},
         logo::Logo,
@@ -41,7 +41,10 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
         ]),
         Mode::Auth => {
             let (footer_text, style) = if app.token_limit_reached() {
-                ("Token invalid", Style::default().fg(Color::Red))
+                (
+                    "Token length limit reached",
+                    Style::default().fg(Color::Red),
+                )
             } else {
                 ("Waiting for token", Style::default().fg(Color::DarkGray))
             };
@@ -53,7 +56,7 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
             Style::default().fg(Color::DarkGray),
         )]),
         Mode::Confirm => Line::from(vec![Span::styled(
-            "Confirm to delete the selected repos",
+            "Press enter to delete the selected repos",
             Style::default().fg(Color::DarkGray),
         )]),
     };
@@ -66,10 +69,13 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
 
     let info_text = vec![
         Line::from(String::from(
-            "Welcome to knife, a terminal application to delete old deserted GitHub repositories.",
+            "Welcome to knife, a terminal application to delete GitHub repositories.",
         )),
         Line::from(String::from(
-            "After hitting Enter, your default browser will open and redirect you to the personal access token webpage on Github.",
+            "After hitting Enter, your default browser will open and redirect you to the personal access token (PAT) page on Github.",
+        )),
+        Line::from(String::from(
+            "Please use the pre-selected settings and copy the PAT.",
         )),
     ];
 
@@ -139,7 +145,7 @@ fn draw_token_input(
 ) {
     let input_area = centered_rect(60, 10, frame.area());
 
-    let border_style = if token_input_too_long {
+    let error_style = if token_input_too_long {
         Style::default().fg(Color::Red)
     } else {
         Style::default()
@@ -148,9 +154,12 @@ fn draw_token_input(
     let key_block = Block::default()
         .title(" Please paste your token here ")
         .borders(Borders::ALL)
-        .border_style(border_style);
+        .border_style(error_style);
 
-    let token_text = Paragraph::new(input).block(key_block).clone();
+    let token_text = Paragraph::new(input)
+        .style(error_style)
+        .block(key_block)
+        .clone();
     frame.render_widget(token_text, input_area);
     frame.set_cursor_position(Position::new(
         // Draw the cursor at the current position in the input field.
