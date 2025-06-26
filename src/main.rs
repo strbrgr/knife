@@ -80,9 +80,8 @@ async fn run_app<B: Backend>(
                         app.enter_char(to_insert);
                     }
                     KeyCode::Enter => {
-                        app.submit_message();
                         app.token = app.token_input.clone();
-                        app.token_input = String::new();
+                        app.submit_message();
                         app.waiting_for_token = false;
                         app.waiting_for_repos = true;
                         let repositories = utils::github::get_data_from_github(&app.token).await?;
@@ -125,8 +124,8 @@ async fn run_app<B: Backend>(
                     }
                     _ => {}
                 },
-                Mode::Confirm => {
-                    if key_event.code == KeyCode::Enter {
+                Mode::Confirm => match key_event.code {
+                    KeyCode::Enter => {
                         if let Some(repositories) = &mut app.repositories {
                             let selected_repos: Vec<String> = repositories
                                 .repo_items
@@ -158,7 +157,11 @@ async fn run_app<B: Backend>(
                             app.mode = Mode::Select;
                         }
                     }
-                }
+                    KeyCode::Esc => {
+                        app.mode = Mode::Select;
+                    }
+                    _ => {}
+                },
             }
         }
     }
