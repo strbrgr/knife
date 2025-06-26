@@ -18,6 +18,7 @@ pub struct App {
     pub exit: bool,
     /// Position of cursor in the editor area.
     pub character_index: usize,
+    /// Token once confirmed
     pub token: String,
     /// Current value of the input box
     pub token_input: String,
@@ -64,9 +65,7 @@ impl App {
 
     pub fn enter_char(&mut self, new_char: char) {
         // Let's not add any more characters if we reached the limit
-        // TODO: Debug print
-        println!("{}", self.token_input);
-        if self.token_limit_reached() {
+        if !self.token_limit_reached() {
             let index = self.byte_index();
             self.token_input.insert(index, new_char);
             self.move_cursor_right();
@@ -145,6 +144,6 @@ impl App {
     }
 
     pub fn token_limit_reached(&self) -> bool {
-        self.token_input.len() >= 40
+        self.token_input.len() > 40
     }
 }
