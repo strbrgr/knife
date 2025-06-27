@@ -147,3 +147,16 @@ impl App {
         self.token_input.len() > 40
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_token_limit_reached_returns_true_when_too_long() {
+        let mut app = App::new();
+        app.token_input = "a".repeat(41);
+        let result = app.token_limit_reached();
+        assert!(result);
+    }
+}
