@@ -1,4 +1,7 @@
-use crate::components::list::{Repositories, Status};
+use crate::{
+    components::list::{Repositories, Status},
+    utils::github::RepositoryClient,
+};
 
 #[derive(PartialEq, Eq, Hash)]
 pub enum Mode {
@@ -32,6 +35,8 @@ pub struct App {
     pub repositories: Option<Repositories>,
     /// Error state for the app
     pub error_state: Option<ErrorState>,
+    /// Client to get all repositories
+    pub repository_client: Option<RepositoryClient>,
 }
 
 impl App {
@@ -46,6 +51,7 @@ impl App {
             waiting_for_repos: false,
             repositories: None,
             error_state: None,
+            repository_client: None,
         }
     }
 

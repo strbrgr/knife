@@ -11,7 +11,7 @@ use ratatui::{
 };
 use reqwest::StatusCode;
 use std::io;
-use utils::{github::delete_repo, ui::ui};
+use utils::{github::RepositoryClient, ui::ui};
 
 use crate::app::{App, Mode};
 
@@ -84,7 +84,14 @@ async fn run_app<B: Backend>(
                         app.submit_message();
                         app.waiting_for_token = false;
                         app.waiting_for_repos = true;
-                        let repositories = utils::github::get_data_from_github(&app.token).await?;
+                        let repository_client = RepositoryClient::new(&app.token);
+                        app.repository_client = Some(repository_client);
+                        let repositories = app
+                            .repository_client
+                            .as_mut()
+                            .unwrap()
+                            .get_repository_data()
+                            .await?;
                         app.repositories = Some(repositories);
                         app.waiting_for_repos = false;
                         app.mode = Mode::Select;
@@ -136,8 +143,12 @@ async fn run_app<B: Backend>(
                                 .collect();
 
                             for repo_name in &selected_repos {
-                                let status_code =
-                                    delete_repo(&repositories.owner, repo_name, &app.token).await?;
+                                let status_code = app
+                                    .repository_client
+                                    .as_mut()
+                                    .unwrap()
+                                    .delete_repo(&repositories.repo_owner, repo_name)
+                                    .await?;
 
                                 if status_code.is_client_error() {
                                     app.error_state = Some(ErrorState::DeleteClientError);
