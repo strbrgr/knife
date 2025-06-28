@@ -15,14 +15,28 @@ use crate::{
 };
 
 pub fn ui(frame: &mut Frame, app: &mut App) {
+    let horizontal_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Fill(1),
+            Constraint::Percentage(90),
+            Constraint::Fill(1),
+        ])
+        .split(frame.area());
+
+    // Center vertically and create the main layout
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(15),
-            Constraint::Min(1),
-            Constraint::Length(3),
+            Constraint::Fill(1),    // 0: Top spacing
+            Constraint::Length(10), // 1: Logo area
+            Constraint::Length(1),  // 2: Padding between logo and welcome text
+            Constraint::Length(3),  // 3: Welcome text, fixed height
+            Constraint::Length(2),  // 4: Padding between welcome text and footer
+            Constraint::Length(1),  // 5: Footer
+            Constraint::Fill(1),    // 6: Bottom spacing
         ])
-        .split(frame.area());
+        .split(horizontal_chunks[1]);
 
     let footer_text = match app.mode {
         Mode::Welcome => Line::from(vec![
@@ -39,18 +53,6 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
                 Style::default().fg(Color::DarkGray),
             ),
         ]),
-        Mode::Auth => {
-            let (footer_text, style) = if app.token_limit_reached() {
-                (
-                    "Token length limit reached",
-                    Style::default().fg(Color::Red),
-                )
-            } else {
-                ("Waiting for token", Style::default().fg(Color::DarkGray))
-            };
-
-            Line::from(vec![Span::styled(footer_text, style)])
-        }
         Mode::Select => Line::from(vec![Span::styled(
             "Use ↓↑ or 'j' and 'k' to move, Spacebar to toggle status, and Enter to confirm",
             Style::default().fg(Color::DarkGray),
@@ -59,13 +61,14 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
             "Press enter to delete the selected repos",
             Style::default().fg(Color::DarkGray),
         )]),
+        _ => Line::from("Unknown mode"),
     };
 
-    let mode_footer = Paragraph::new(footer_text)
+    let footer = Paragraph::new(footer_text)
         .alignment(ratatui::layout::Alignment::Center)
         .block(Block::default());
 
-    let logo = Logo::new();
+    let logo = Logo::adaptive(chunks[1]);
 
     let info_text = vec![
         Line::from(String::from(
@@ -81,12 +84,16 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
 
     let welcome_text = Paragraph::new(Text::from(info_text))
         .alignment(ratatui::layout::Alignment::Center)
-        .style(Style::default().fg(Color::Yellow))
+        .style(Style::default())
         .block(Block::new());
 
-    frame.render_widget(logo, chunks[0]);
-    frame.render_widget(welcome_text, chunks[1]);
-    frame.render_widget(mode_footer, chunks[2]);
+    if app.mode == Mode::Welcome {
+        frame.render_widget(logo, chunks[1]);
+        frame.render_widget(welcome_text, chunks[3]);
+    }
+    if app.mode != Mode::Auth {
+        frame.render_widget(footer, chunks[5]);
+    }
 
     match app.mode {
         Mode::Welcome => {}
@@ -141,25 +148,25 @@ fn draw_token_input(
     frame: &mut Frame,
     input: &str,
     character_index: u16,
-    token_input_too_long: bool,
+    token_limit_reached: bool,
 ) {
     let input_area = centered_rect(60, 10, frame.area());
 
-    let error_style = if token_input_too_long {
-        Style::default().fg(Color::Red)
+    let (title, style) = if token_limit_reached {
+        (
+            " Token length limit reached ",
+            Style::default().fg(Color::Red),
+        )
     } else {
-        Style::default()
+        (" Please paste your token here ", Style::default())
     };
 
     let key_block = Block::default()
-        .title(" Please paste your token here ")
+        .title(title)
         .borders(Borders::ALL)
-        .border_style(error_style);
+        .border_style(style);
 
-    let token_text = Paragraph::new(input)
-        .style(error_style)
-        .block(key_block)
-        .clone();
+    let token_text = Paragraph::new(input).style(style).block(key_block).clone();
     frame.render_widget(token_text, input_area);
     frame.set_cursor_position(Position::new(
         // Draw the cursor at the current position in the input field.
