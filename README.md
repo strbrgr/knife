@@ -19,7 +19,13 @@ Coming soon...
 Make sure you have Rust installed. If not, get it from [rustup.rs](https://rustup.rs).
 
 ```bash
-git clone https://github.com/your-username/knife.git
+git clone https://github.com/strbrgr/knife.git
 cd knife
 cargo run
 ```
+
+## Q&A
+
+### I deleted repos by accident, what now?
+
+As long as you still have the `.git` folder in your project, you will be able to create another repository and link it your new upstream.
