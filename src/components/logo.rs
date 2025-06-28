@@ -26,20 +26,44 @@ impl Logo {
             content: get_ascii_logo(),
         }
     }
+
+    // Leaving this for now in case I ever want to change to responsive logos
+    pub fn compact() -> Self {
+        Logo {
+            content: get_ascii_logo(),
+        }
+    }
+
+    pub fn mini() -> Self {
+        Logo {
+            content: get_ascii_logo(),
+        }
+    }
+
+    pub fn adaptive(area: Rect) -> Self {
+        if area.height < 8 {
+            Self::mini()
+        } else if area.height < 14 {
+            Self::compact()
+        } else {
+            Self::new()
+        }
+    }
+
+    pub fn logo_height(&self) -> u16 {
+        self.content.lines().count() as u16
+    }
 }
 
 fn get_ascii_logo() -> String {
     let ascii_art = r#"
-██ ▄█▀ ███▄    █  ██▓  █████▒▓█████ 
-██▄█  ██ ▀█   █ ▓██▒▓██   ▒ ▓█   ▀ 
-▓███▄░ ▓██  ▀█ ██▒▒██▒▒████ ░ ▒███   
-▓██ █▄ ▓██▒  ▐▌██▒░██░░▓█▒  ░ ▒▓█  ▄ 
-▒██▒ █▄▒██░   ▓██░░██░░▒█░    ░▒████▒
-▒ ▒▒ ▓▒░ ▒░   ▒ ▒ ░▓   ▒ ░    ░░ ▒░ ░
-░ ░▒ ▒░░ ░░   ░ ▒░ ▒ ░ ░       ░ ░  ░
-░ ░░ ░    ░   ░ ░  ▒ ░ ░ ░       ░   
-░  ░            ░  ░             ░  ░
+      :::    ::: ::::    ::: ::::::::::: :::::::::: :::::::::: 
+     :+:   :+:  :+:+:   :+:     :+:     :+:        :+:         
+    +:+  +:+   :+:+:+  +:+     +:+     +:+        +:+          
+   +#++:++    +#+ +:+ +#+     +#+     :#::+::#   +#++:++#      
+  +#+  +#+   +#+  +#+#+#     +#+     +#+        +#+            
+ #+#   #+#  #+#   #+#+#     #+#     #+#        #+#             
+###    ### ###    #### ########### ###        ##########       
 "#;
-
     ascii_art.to_string()
 }
