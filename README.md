@@ -2,6 +2,8 @@
 
 > A terminal application to find and delete your old, deserted GitHub repositories.
 
+![image](https://github.com/strbrgr/knife/blob/main/assets/knife_jochen_stierberger.jpg)
+
 ## Features
 
 - Authentication using a GitHub token
