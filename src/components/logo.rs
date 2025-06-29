@@ -49,10 +49,6 @@ impl Logo {
             Self::new()
         }
     }
-
-    pub fn logo_height(&self) -> u16 {
-        self.content.lines().count() as u16
-    }
 }
 
 fn get_ascii_logo() -> String {
