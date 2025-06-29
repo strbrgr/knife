@@ -1,9 +1,10 @@
 use ratatui::{
     Frame,
-    layout::{Constraint, Direction, Flex, Layout, Position, Rect},
+    layout::{Alignment, Constraint, Direction, Flex, Layout, Position, Rect},
     style::{Color, Modifier, Style},
+    symbols,
     text::{Line, Span, Text},
-    widgets::{Block, Borders, Clear, Paragraph},
+    widgets::{Block, BorderType, Borders, Clear, Paragraph},
 };
 
 use crate::{
@@ -185,7 +186,6 @@ fn popup_area(area: Rect, percent_x: u16, percent_y: u16) -> Rect {
     area
 }
 
-// TODO: Make this scrollable
 fn render_popup_content(frame: &mut Frame, repos: &Vec<RepoItem>) {
     let mut lines = vec![];
     for r in repos {
@@ -194,11 +194,16 @@ fn render_popup_content(frame: &mut Frame, repos: &Vec<RepoItem>) {
         }
     }
     let text = Text::from(lines);
-    let p = Paragraph::new(text)
-        .alignment(ratatui::layout::Alignment::Center)
-        .block(Block::bordered());
 
-    let area = popup_area(frame.area(), 60, 40);
-    frame.render_widget(Clear, area); // this clears out the background
-    frame.render_widget(p, area);
+    let paragraph = Paragraph::new(text)
+        .alignment(Alignment::Center)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_type(BorderType::Thick),
+        )
+        .style(Style::default().fg(Color::Red));
+
+    let area = popup_area(frame.area(), 60, 20);
+    frame.render_widget(paragraph, area);
 }
