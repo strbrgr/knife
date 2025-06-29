@@ -2,9 +2,8 @@ use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Flex, Layout, Position, Rect},
     style::{Color, Modifier, Style},
-    symbols,
     text::{Line, Span, Text},
-    widgets::{Block, BorderType, Borders, Clear, Paragraph},
+    widgets::{Block, BorderType, Borders, Paragraph},
 };
 
 use crate::{
