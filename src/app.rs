@@ -5,7 +5,7 @@ use ratatui::{
     prelude::Backend,
     style::{Color, Modifier, Style},
     text::{Line, Span, Text},
-    widgets::{Block, Paragraph, Widget},
+    widgets::{Block, Paragraph, Widget, Wrap},
 };
 use reqwest::StatusCode;
 use std::io::{self};
@@ -346,21 +346,21 @@ impl App {
             ])
             .split(frame.area());
 
-        let body_height = match self.mode {
-            Mode::Select => 15,
-            _ => 3,
+        let body_constraint = match self.mode {
+            Mode::Select => Constraint::Length(15),
+            _ => Constraint::Length(5),
         };
 
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Fill(1),             // 0: Top spacing
-                Constraint::Length(10),          // 1: Logo area
-                Constraint::Length(1),           // 2: Padding between logo and welcome text
-                Constraint::Length(body_height), // 3: Dynamic body height
-                Constraint::Length(2),           // 4: Padding between welcome text and footer
-                Constraint::Length(1),           // 5: Footer
-                Constraint::Fill(1),             // 6: Bottom spacing
+                Constraint::Fill(1),    // 0: Top spacing
+                Constraint::Length(10), // 1: Logo area
+                Constraint::Length(1),  // 2: Padding between logo and welcome text
+                body_constraint,        // 3: Dynamic body height
+                Constraint::Length(2),  // 4: Padding between welcome text and footer
+                Constraint::Length(1),  // 5: Footer
+                Constraint::Fill(1),    // 6: Bottom spacing
             ])
             .split(horizontal_chunks[1]);
 
@@ -435,6 +435,7 @@ impl App {
             .alignment(ratatui::layout::Alignment::Center)
             .style(Style::default())
             .block(Block::new())
+            .wrap(Wrap { trim: true })
     }
 
     fn footer(&self) -> impl Widget {
