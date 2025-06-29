@@ -26,6 +26,11 @@ cd knife
 cargo run
 ```
 
+## Shoutouts
+
+- [Orhun Parmaksız](https://github.com/orhun) for his work on [ratatui](https://github.com/ratatui-org/ratatui)
+- [Josh McKinney](https://github.com/joshka) for writing a lot of high quality code to learn from
+
 ## Q&A
 
 ### I deleted repos by accident, what now?
