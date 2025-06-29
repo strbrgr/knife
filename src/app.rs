@@ -1,7 +1,7 @@
 use ratatui::{
     Frame, Terminal,
     crossterm::event::{self, Event, KeyCode, KeyModifiers},
-    layout::{Constraint, Direction, Layout, Rect},
+    layout::{Constraint, Direction, Layout},
     prelude::Backend,
     style::{Color, Modifier, Style},
     text::{Line, Span, Text},
