@@ -1,27 +1,17 @@
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
-    style::{
-        Color, Modifier, Style, Stylize,
-        palette::{
-            material::{BLUE, GREEN},
-            tailwind::SLATE,
-        },
-    },
-    symbols,
+    style::{Color, Modifier, Style, Stylize, palette::material::GREEN},
     text::Line,
     widgets::{Block, Borders, HighlightSpacing, List, ListItem, ListState, StatefulWidget},
 };
 
-const TODO_HEADER_STYLE: Style = Style::new().fg(SLATE.c100).bg(BLUE.c800);
-const NORMAL_ROW_BG: Color = SLATE.c950;
-const ALT_ROW_BG_COLOR: Color = SLATE.c900;
-const SELECTED_STYLE: Style = Style::new().bg(SLATE.c800).add_modifier(Modifier::BOLD);
-const TEXT_FG_COLOR: Color = SLATE.c200;
+const SELECTED_STYLE: Style = Style::new().bg(Color::Gray).add_modifier(Modifier::BOLD);
+const TEXT_FG_COLOR: Color = Color::White;
 const COMPLETED_TEXT_FG_COLOR: Color = GREEN.c500;
 
 pub struct Repositories {
-    pub owner: String,
+    pub repo_owner: String,
     pub repo_items: RepositoryInfo,
 }
 
@@ -64,20 +54,14 @@ impl RepoItem {
 
 pub fn render_list(repo_list: &mut RepositoryInfo, area: Rect, buf: &mut Buffer) {
     let block = Block::new()
-        .title(Line::raw("Repo List").centered())
+        .title(Line::raw("Your public repositories").centered())
         .borders(Borders::TOP)
-        .border_set(symbols::border::EMPTY)
-        .border_style(TODO_HEADER_STYLE)
-        .bg(NORMAL_ROW_BG);
+        .style(Style::default().fg(Color::LightRed));
 
     let items: Vec<ListItem> = repo_list
         .repos
         .iter()
-        .enumerate()
-        .map(|(i, repo_item)| {
-            let color = alternate_colors(i);
-            ListItem::from(repo_item).bg(color)
-        })
+        .map(|repo_item| ListItem::from(repo_item).bg(Color::Reset))
         .collect();
 
     let list = List::new(items)
@@ -89,14 +73,6 @@ pub fn render_list(repo_list: &mut RepositoryInfo, area: Rect, buf: &mut Buffer)
     // We need to disambiguate this trait method as both `Widget` and `StatefulWidget` share the
     // same method name `render`.
     StatefulWidget::render(list, area, buf, &mut repo_list.list_state);
-}
-
-const fn alternate_colors(i: usize) -> Color {
-    if i % 2 == 0 {
-        NORMAL_ROW_BG
-    } else {
-        ALT_ROW_BG_COLOR
-    }
 }
 
 impl From<&RepoItem> for ListItem<'_> {
