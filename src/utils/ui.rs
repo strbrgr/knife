@@ -55,11 +55,11 @@ pub fn draw_token_input(
         .borders(Borders::ALL)
         .border_style(style);
 
-    let token_text = Paragraph::new(input).style(style).block(key_block).clone();
+    let token_text = Paragraph::new(input).style(style).block(key_block);
     frame.render_widget(token_text, input_area);
     frame.set_cursor_position(Position::new(
         // Draw the cursor at the current position in the input field.
-        // This position is can be controlled via the left and right arrow key
+        // This position can be controlled via the left and right arrow key
         input_area.x + character_index + 1,
         // Move one line down, from the border to the input line
         input_area.y + 1,
