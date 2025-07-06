@@ -1,10 +1,9 @@
+use crate::app::App;
 use ratatui::DefaultTerminal;
 
-use crate::app::App;
-
 mod app;
-mod components;
-mod utils;
+mod github;
+mod ui;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
