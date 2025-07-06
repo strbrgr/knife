@@ -1,9 +1,9 @@
 use ratatui::{
     Frame, Terminal,
-    crossterm::event::{self, Event, KeyCode, KeyModifiers},
+    crossterm::event::{self, Event, KeyCode, KeyModifiers, MouseEventKind},
     layout::{Constraint, Direction, Layout},
     prelude::Backend,
-    style::{Color, Modifier, Style},
+    style::{Modifier, Style},
     text::{Line, Span, Text},
     widgets::{Block, Paragraph, Widget, Wrap},
 };
@@ -11,15 +11,12 @@ use reqwest::StatusCode;
 use std::io::{self};
 
 use crate::{
-    components::list::{Repositories, Status, render_list},
-    utils::{
-        github::RepositoryClient,
-        ui::{draw_token_input, render_popup_content},
+    github::RepositoryClient,
+    ui::{
+        DARK_GRAY, GithubContent, LIGHT_RED, Status, draw_token_input, render_list,
+        render_popup_content,
     },
 };
-
-pub const LIGHT_RED: Color = Color::LightRed;
-pub const DARK_GRAY: Color = Color::DarkGray;
 
 pub struct App {
     // Running / Quit state
@@ -37,7 +34,7 @@ pub struct App {
     // Are we waiting for repos
     pub waiting_for_repos: bool,
     // Data that is being fetched from github
-    pub repositories: Option<Repositories>,
+    pub github_content: Option<GithubContent>,
     // Error state for the app
     pub error_state: Option<ErrorState>,
     // Client to get all repositories
@@ -80,7 +77,7 @@ impl App {
             waiting_for_token: false,
             mode: Mode::Welcome,
             waiting_for_repos: false,
-            repositories: None,
+            github_content: None,
             error_state: None,
             repository_client: None,
         }
@@ -112,10 +109,6 @@ impl App {
                 self.exit();
             }
 
-            // if key_event.kind == event::KeyEventKind::Release {
-            //     // Skip events that are not KeyEventKind::Press
-            //     continue;
-            // }
             match self.mode {
                 Mode::Welcome => {
                     if key_event.code == KeyCode::Enter {
@@ -140,15 +133,13 @@ impl App {
                         self.waiting_for_repos = true;
                         let repository_client = RepositoryClient::new(&self.token);
                         self.repository_client = Some(repository_client);
-                        let repositories = self
-                            .repository_client
-                            .as_mut()
-                            .unwrap()
-                            .get_repository_data()
-                            .await?;
-                        self.repositories = Some(repositories);
-                        self.waiting_for_repos = false;
-                        self.mode = Mode::Select;
+                        if let Some(repository_client) = self.repository_client.as_mut() {
+                            let owner = repository_client.get_owner().await?;
+                            let github_content = repository_client.get_repos(&owner).await?;
+                            self.github_content = Some(github_content);
+                            self.waiting_for_repos = false;
+                            self.mode = Mode::Select;
+                        }
                     }
                     KeyCode::Backspace => self.delete_char(),
                     KeyCode::Left => self.move_cursor_left(),
@@ -169,9 +160,8 @@ impl App {
                         self.toggle_status();
                     }
                     KeyCode::Enter => {
-                        if let Some(repositories) = &self.repositories {
-                            let at_least_one_selected = repositories
-                                .repo_items
+                        if let Some(github_content) = &self.github_content {
+                            let at_least_one_selected = github_content
                                 .repos
                                 .iter()
                                 .any(|repo| repo.status == Status::Selected);
@@ -187,9 +177,8 @@ impl App {
                 },
                 Mode::Confirm => match key_event.code {
                     KeyCode::Enter => {
-                        if let Some(repositories) = &mut self.repositories {
+                        if let Some(repositories) = &mut self.github_content {
                             let selected_repos: Vec<String> = repositories
-                                .repo_items
                                 .repos
                                 .iter()
                                 .filter(|r| r.status == Status::Selected)
@@ -201,7 +190,7 @@ impl App {
                                     .repository_client
                                     .as_mut()
                                     .unwrap()
-                                    .delete_repo(&repositories.repo_owner, repo_name)
+                                    .delete_repo(&repositories.owner, repo_name)
                                     .await?;
 
                                 if status_code.is_client_error() {
@@ -209,8 +198,7 @@ impl App {
                                 }
 
                                 if status_code == StatusCode::NO_CONTENT {
-                                    repositories.repo_items.repos = repositories
-                                        .repo_items
+                                    repositories.repos = repositories
                                         .repos
                                         .iter()
                                         .filter(|repo| &repo.name != repo_name)
@@ -307,25 +295,24 @@ impl App {
     }
 
     pub fn select_next(&mut self) {
-        if let Some(repositories) = self.repositories.as_mut() {
-            repositories.repo_items.list_state.select_next();
+        if let Some(github_content) = self.github_content.as_mut() {
+            github_content.list_state.select_next();
         }
     }
 
     pub fn select_previous(&mut self) {
-        if let Some(repositories) = self.repositories.as_mut() {
-            repositories.repo_items.list_state.select_previous();
+        if let Some(github_content) = self.github_content.as_mut() {
+            github_content.list_state.select_previous();
         }
     }
 
     pub fn toggle_status(&mut self) {
-        if let Some(repositories) = self.repositories.as_mut() {
-            if let Some(i) = repositories.repo_items.list_state.selected() {
-                repositories.repo_items.repos[i].status =
-                    match repositories.repo_items.repos[i].status {
-                        Status::Selected => Status::Unselected,
-                        Status::Unselected => Status::Selected,
-                    };
+        if let Some(github_content) = self.github_content.as_mut() {
+            if let Some(i) = github_content.list_state.selected() {
+                github_content.repos[i].status = match github_content.repos[i].status {
+                    Status::Selected => Status::Unselected,
+                    Status::Unselected => Status::Selected,
+                };
             }
         }
     }
@@ -348,6 +335,7 @@ impl App {
 
         let body_constraint = match self.mode {
             Mode::Select => Constraint::Length(15),
+            Mode::Confirm => Constraint::Length(12),
             _ => Constraint::Length(5),
         };
 
@@ -385,15 +373,15 @@ impl App {
             }
             Mode::Select => {
                 if !self.waiting_for_repos {
-                    if let Some(repositories) = self.repositories.as_mut() {
-                        render_list(&mut repositories.repo_items, body, frame.buffer_mut());
+                    if let Some(github_content) = self.github_content.as_mut() {
+                        render_list(github_content, body, frame.buffer_mut());
                         self.footer().render(footer, frame.buffer_mut());
                     }
                 }
             }
             Mode::Confirm => {
-                if let Some(repositories) = &self.repositories {
-                    render_popup_content(frame, &repositories.repo_items.repos);
+                if let Some(github_content) = &self.github_content {
+                    render_popup_content(frame, &github_content.repos);
                     self.footer().render(footer, frame.buffer_mut());
                 }
             }
