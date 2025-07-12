@@ -1,5 +1,14 @@
 # knife
 
+<!--toc:start-->
+
+- [knife](#knife)
+  - [Features](#features)
+  - [Installation](#installation)
+  - [What's next?](#whats-next)
+  - [Shoutouts](#shoutouts)
+  <!--toc:end-->
+
 > A terminal application to find and delete your old, deserted GitHub repositories.
 
 ![image](https://github.com/strbrgr/knife/blob/main/assets/knife_jochen_stierberger.jpg)
@@ -12,10 +21,6 @@
 - Easily clean up inactive or forgotten repos
 - Beautiful terminal UI powered by [ratatui](https://github.com/ratatui-org/ratatui)
 
-## Demo
-
-Coming soon...
-
 ## Installation
 
 Make sure you have Rust installed. If not, get it from [rustup.rs](https://rustup.rs).
@@ -25,6 +30,10 @@ git clone https://github.com/strbrgr/knife.git
 cd knife
 cargo run
 ```
+
+## What's next?
+
+This is a quick MVP to get something out of the door fast. I think it could be improved by pulling in `anyhow`, a bit of `tracing` and maybe `color-eyre`.
 
 ## Shoutouts
 
