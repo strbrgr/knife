@@ -1,6 +1,6 @@
 use crate::ui::{GithubContent, Repository, Status};
 use ratatui::widgets::ListState;
-use reqwest::{Client, Method, RequestBuilder, StatusCode};
+use reqwest::{Client, Error, Method, RequestBuilder, StatusCode};
 use serde_json::Value;
 
 pub struct RepositoryClient {
@@ -26,8 +26,15 @@ impl RepositoryClient {
     }
 
     pub async fn get_owner(&mut self) -> Result<String, Box<dyn std::error::Error>> {
-        let url = "https://api.github.com/user";
-        let res = self.build_request(Method::GET, url).send().await?;
+        const USER_URL: &str = "https://api.github.com/user";
+        let res = self.build_request(Method::GET, USER_URL).send().await?;
+        if !res.status().is_success() {
+            let error_msg = format!(
+                "Could not get owner from GitHub. Request failed with status code: {}",
+                res.status()
+            );
+            return Err(error_msg.into());
+        }
         let body = res.text().await?;
         let value: Value = serde_json::from_str(&body)?;
         let owner = value
@@ -44,6 +51,13 @@ impl RepositoryClient {
     ) -> Result<GithubContent, Box<dyn std::error::Error>> {
         let url = format!("https://api.github.com/users/{owner}/repos");
         let res = self.build_request(Method::GET, &url).send().await?;
+        if !res.status().is_success() {
+            let error_msg = format!(
+                "Could not get repositories from GitHub. Request failed with status code: {}",
+                res.status()
+            );
+            return Err(error_msg.into());
+        }
 
         let body = res.text().await?;
 
