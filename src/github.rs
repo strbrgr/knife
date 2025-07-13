@@ -1,6 +1,6 @@
 use crate::ui::{GithubContent, Repository, Status};
 use ratatui::widgets::ListState;
-use reqwest::{Client, Error, Method, RequestBuilder, StatusCode};
+use reqwest::{Client, Method, RequestBuilder, StatusCode};
 use serde_json::Value;
 
 pub struct RepositoryClient {
@@ -70,7 +70,7 @@ impl RepositoryClient {
             .filter_map(|item| item.get("name").and_then(Value::as_str))
             .map(|s| Repository {
                 name: s.to_owned(),
-                status: Status::Selected,
+                status: Status::Unselected,
             })
             .collect::<Vec<_>>();
 
