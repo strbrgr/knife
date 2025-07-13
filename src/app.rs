@@ -113,18 +113,19 @@ impl App {
             }
 
             match self.mode {
-                Mode::Welcome => {
-                    if key_event.code == KeyCode::Enter {
-                        let path = "https://github.com/settings/tokens/new?scopes=delete_repo,repo&description=Repo%20Remover%20Token";
-
+                Mode::Welcome => match key_event.code {
+                    KeyCode::Enter => {
+                        const PATH: &str = "https://github.com/settings/tokens/new?scopes=delete_repo,repo&description=Repo%20Remover%20Token";
                         self.waiting_for_token = true;
                         self.mode = Mode::Auth;
 
-                        if let Err(e) = open::that(path) {
+                        if let Err(e) = open::that(PATH) {
                             eprintln!("Failed to open browser: {e}");
                         }
                     }
-                }
+                    KeyCode::Char('q') | KeyCode::Esc => self.exit(),
+                    _ => {}
+                },
                 Mode::Auth => match key_event.code {
                     KeyCode::Char(to_insert) => {
                         self.enter_char(to_insert);
@@ -209,6 +210,7 @@ impl App {
                                 }
 
                                 if status_code == StatusCode::NO_CONTENT {
+                                    // Update repository list and remove the ones we just deleted
                                     repositories.repos = repositories
                                         .repos
                                         .iter()
@@ -218,6 +220,7 @@ impl App {
                                 }
                             }
 
+                            // Once deleted we go back to Select Mode
                             self.mode = Mode::Select;
                         }
                     }
@@ -423,7 +426,7 @@ impl App {
                 "Welcome to knife, a terminal application to delete GitHub repositories.",
             )),
             Line::from(String::from(
-                "After hitting Enter, your default browser will open and redirect you to the personal access token (PAT) page on Github.",
+                "After hitting 'Enter', your default browser will open and redirect you to the personal access token (PAT) page on Github.",
             )),
             Line::from(String::from(
                 "Please use the pre-selected settings and copy the PAT.",
@@ -442,7 +445,7 @@ impl App {
             Mode::Welcome => Line::from(vec![
                 Span::styled("Hit ", Style::default().fg(DARK_GRAY)),
                 Span::styled(
-                    "Enter",
+                    "'Enter'",
                     Style::default()
                         .fg(DARK_GRAY)
                         .add_modifier(Modifier::ITALIC)
@@ -454,11 +457,11 @@ impl App {
                 ),
             ]),
             Mode::Select => Line::from(vec![Span::styled(
-                "Use ↓↑ or 'j' and 'k' to move, Spacebar to toggle status, and Enter to confirm",
+                "Use '↓', '↑', 'j', or 'k' to move; 'Space' to toggle status; and 'Enter' to confirm.",
                 Style::default().fg(DARK_GRAY),
             )]),
             Mode::Confirm => Line::from(vec![Span::styled(
-                "Press enter to delete the selected repos",
+                "Press 'Enter' to delete the selected repo(s)",
                 Style::default().fg(DARK_GRAY),
             )]),
             _ => Line::from("Unknown mode"),
