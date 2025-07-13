@@ -1,6 +1,6 @@
 use ratatui::{
     Frame, Terminal,
-    crossterm::event::{self, Event, KeyCode, KeyModifiers, MouseEventKind},
+    crossterm::event::{self, Event, KeyCode, KeyModifiers},
     layout::{Constraint, Direction, Layout},
     prelude::Backend,
     style::{Modifier, Style},
@@ -13,8 +13,8 @@ use std::io::{self};
 use crate::{
     github::RepositoryClient,
     ui::{
-        DARK_GRAY, GithubContent, LIGHT_RED, Status, draw_token_input, render_list,
-        render_popup_content,
+        DARK_GRAY, GithubContent, LIGHT_RED, Status, draw_token_input, render_all_repositories,
+        render_selected_repositories,
     },
 };
 
@@ -374,14 +374,14 @@ impl App {
             Mode::Select => {
                 if !self.waiting_for_repos {
                     if let Some(github_content) = self.github_content.as_mut() {
-                        render_list(github_content, body, frame.buffer_mut());
+                        render_all_repositories(github_content, body, frame.buffer_mut());
                         self.footer().render(footer, frame.buffer_mut());
                     }
                 }
             }
             Mode::Confirm => {
                 if let Some(github_content) = &self.github_content {
-                    render_popup_content(frame, &github_content.repos);
+                    render_selected_repositories(frame, &github_content.repos);
                     self.footer().render(footer, frame.buffer_mut());
                 }
             }
