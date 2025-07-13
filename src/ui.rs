@@ -97,7 +97,7 @@ pub fn popup_area(area: Rect, percent_x: u16, percent_y: u16) -> Rect {
     area
 }
 
-pub fn render_popup_content(frame: &mut Frame, repos: &Vec<Repository>) {
+pub fn render_selected_repositories(frame: &mut Frame, repos: &[Repository]) {
     let selected_repos: Vec<String> = repos
         .iter()
         .filter(|r| r.status == Status::Selected)
@@ -108,18 +108,13 @@ pub fn render_popup_content(frame: &mut Frame, repos: &Vec<Repository>) {
     let text = Text::from(content);
     let paragraph = Paragraph::new(text)
         .alignment(Alignment::Center)
-        // .block(
-        //     Block::default()
-        //         .borders(Borders::ALL)
-        //         .border_type(BorderType::Thick),
-        // )
         .style(Style::default().fg(Color::Red))
         .wrap(Wrap { trim: true });
     let area = popup_area(frame.area(), 80, 40);
     frame.render_widget(paragraph, area);
 }
 
-pub fn render_list(github_content: &mut GithubContent, area: Rect, buf: &mut Buffer) {
+pub fn render_all_repositories(github_content: &mut GithubContent, area: Rect, buf: &mut Buffer) {
     let block = Block::new()
         .title(Line::raw("Your public repositories").centered())
         .borders(Borders::TOP)
