@@ -5,8 +5,8 @@
 - [knife](#knife)
   - [Features](#features)
   - [Installation](#installation)
-  - [What's next?](#whats-next)
   - [Shoutouts](#shoutouts)
+  - [Q&A](#qa)
   <!--toc:end-->
 
 > A terminal application to find and delete your old, deserted GitHub repositories.
@@ -30,10 +30,6 @@ git clone https://github.com/strbrgr/knife.git
 cd knife
 cargo run
 ```
-
-## What's next?
-
-This is a quick MVP to get something out of the door fast. I think it could be improved by pulling in `anyhow`, a bit of `tracing` and maybe `color-eyre`.
 
 ## Shoutouts
 
