@@ -2,7 +2,7 @@ use ratatui::{
     Frame,
     buffer::Buffer,
     layout::{Alignment, Constraint, Direction, Flex, Layout, Position, Rect},
-    style::{Color, Modifier, Style, Stylize, palette::material::GREEN},
+    style::{Color, Modifier, Style, Stylize},
     text::{Line, Text},
     widgets::{
         Block, Borders, HighlightSpacing, List, ListItem, ListState, Paragraph, StatefulWidget,
@@ -12,7 +12,7 @@ use ratatui::{
 
 const SELECTED_STYLE: Style = Style::new().bg(Color::Gray).add_modifier(Modifier::BOLD);
 const TEXT_FG_COLOR: Color = Color::White;
-const COMPLETED_TEXT_FG_COLOR: Color = GREEN.c500;
+const COMPLETED_TEXT_FG_COLOR: Color = Color::LightCyan;
 pub const LIGHT_RED: Color = Color::LightRed;
 pub const DARK_GRAY: Color = Color::DarkGray;
 
