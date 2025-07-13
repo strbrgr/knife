@@ -5,13 +5,14 @@
 - [knife](#knife)
   - [Features](#features)
   - [Installation](#installation)
+  - [What's next?](#whats-next)
   - [Shoutouts](#shoutouts)
   - [Q&A](#qa)
   <!--toc:end-->
 
 > A terminal application to find and delete your old, deserted GitHub repositories.
 
-![image](https://github.com/strbrgr/knife/blob/main/assets/knife_jochen_stierberger.jpg)
+![image](https://github.com/strbrgr/knife/blob/main/assets/knife_welcome_screen.jpg)
 
 ## Features
 
@@ -30,6 +31,10 @@ git clone https://github.com/strbrgr/knife.git
 cd knife
 cargo run
 ```
+
+## What's next?
+
+Better error handling and unit tests!
 
 ## Shoutouts
 
