@@ -36,7 +36,7 @@ pub struct App {
     // Data that is being fetched from github
     pub github_content: Option<GithubContent>,
     // Error state for the app
-    pub error_state: Option<ErrorState>,
+    pub error_state: Option<Error>,
     // Client to get all repositories
     pub repository_client: Option<RepositoryClient>,
 }
@@ -50,8 +50,11 @@ pub enum Mode {
 }
 
 #[derive(PartialEq, Eq, Hash)]
-pub enum ErrorState {
-    DeleteClientError,
+pub enum Error {
+    DeleteRepository,
+    GetRepositoryOwner,
+    GetRepositories,
+    NoRepositorySelected,
 }
 
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -134,11 +137,19 @@ impl App {
                         let repository_client = RepositoryClient::new(&self.token);
                         self.repository_client = Some(repository_client);
                         if let Some(repository_client) = self.repository_client.as_mut() {
-                            let owner = repository_client.get_owner().await?;
-                            let github_content = repository_client.get_repos(&owner).await?;
-                            self.github_content = Some(github_content);
-                            self.waiting_for_repos = false;
-                            self.mode = Mode::Select;
+                            match repository_client.get_owner().await {
+                                Ok(owner) => match repository_client.get_repos(&owner).await {
+                                    Ok(github_content) => {
+                                        self.github_content = Some(github_content);
+                                        self.waiting_for_repos = false;
+                                        self.mode = Mode::Select;
+                                    }
+                                    Err(_) => self.error_state = Some(Error::GetRepositories),
+                                },
+                                Err(_) => {
+                                    self.error_state = Some(Error::GetRepositoryOwner);
+                                }
+                            }
                         }
                     }
                     KeyCode::Backspace => self.delete_char(),
@@ -169,7 +180,7 @@ impl App {
                             if at_least_one_selected {
                                 self.mode = Mode::Confirm
                             } else {
-                                // TODO: error case change colors
+                                self.error_state = Some(Error::NoRepositorySelected);
                             }
                         }
                     }
@@ -194,7 +205,7 @@ impl App {
                                     .await?;
 
                                 if status_code.is_client_error() {
-                                    self.error_state = Some(ErrorState::DeleteClientError);
+                                    self.error_state = Some(Error::DeleteRepository);
                                 }
 
                                 if status_code == StatusCode::NO_CONTENT {
